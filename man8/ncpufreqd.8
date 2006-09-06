@@ -1,0 +1,119 @@
+.\" (C) 2004-2005 Krzysiek "Nelchael" Pawlik
+.\" <krzysiek.pawlik@people.pl>
+.\" http://fatcat.ftj.agh.edu.pl/~nelchael/
+.TH ncpufreqd 8 2005-05-09 ncpufreqd
+.SH NAME
+ncpufreqd \- daemon for throttling CPU speed
+.SH SYNOPSIS
+.B "ncpufreqd [--version]"
+.SH DESCRIPTION
+.PP
+.B ncpufreqd
+watches CPU temperature via ACPI's (
+.I /proc/acpi/thermal_zone/THM0/temperature
+) interface. If temperature exceeds defined value (in configuration file
+.I /etc/ncpufreqd.conf
+)
+.B ncpufreqd
+will lower the speed of CPU via cpufreq or ACPI's throttling interface. If temperature drops below "low" temperature speed of CPU is restored to maximum. When machine is running on batteries (as indicated by ACPI) speed of CPU is set to powersave mode (for cpufreq interface) or is throttled down (ACPI throttling) to save batteries.
+.PP
+.B ncpufreqd
+requires ACPI's modules to be loaded (ACPI can be also compiled into kernel). Following kernel options are required as modules or compiled into kernel: CONFIG_ACPI_AC, CONFIG_ACPI_PROCESSOR, CONFIG_ACPI_THERMAL. For ACPI throttling to work the processor has to support it. Most modern processor do so. cpufreq interface requires 2.6 series kernel and sysfs mounted on
+.I /sys
+, also this kernel options are required: CONFIG_CPU_FREQ, CONFIG_CPU_FREQ_GOV_PERFORMANCE and CONFIG_CPU_FREQ_GOV_POWERSAVE.
+.SH EXIT STATUS
+.PP
+-2 when tried to run by normal user (not root)
+.PP
+-1 when fork() call failed (very unlikely)
+.PP
+In any other case the daemon returns 0.
+.B ncpufreqd
+logs all messages to system logger.
+.SH USAGE
+.PP
+Configure ncpufreqd with
+.I /etc/ncpufreqd.conf
+and add it to init scripts to run automaticaly on boot up.
+.SH FILES
+.PP
+.I /etc/ncpufreqd.conf
+- configuration file for daemon
+.SH CONFIGURATION
+.PP
+Following settings are valid in
+.I /etc/ncpufreqd.conf
+:
+
+.IP use_cpufreq 19
+If set to 1
+.B ncpufreqd
+will use cpufreq interface, if set to 0 it will use ACPI throttling
+
+.IP temp_high 19
+Sets the high temperature - if current temperature exceeds this temperature
+.B ncpufreqd
+will cut the processor power as much as possible, allowing it to cool down.
+
+.IP temp_low 19
+Sets the low temperature - if current temperature is below this temperature
+.B ncpufreqd
+will set the processor speed to maximum.
+
+.IP throttling_states 19
+Sets the number of allowed states. This value can be obtained from
+.I /proc/acpi/processor/CPU/throttling
+in the "state count" line.
+
+.IP throttling_offline 19
+This value will be used to throttle processor speed when AC is off-line (running on batteries). Recommended value is that which cuts about 60% of processor speed (check
+.I /proc/acpi/processor/CPU/throttling
+to see which state it is).
+
+.IP verbose 19
+Sets the verbosity level - how much of data will the daemon send to system logger. Recomended values are 0 or 1.
+Setting verbose to 2 will produce huge ammount of garbage in system logs (it's useful only when debugging the daemon).
+
+.IP sleep 19
+How long to sleep between 'ticks' in seconds - how often the daemon should check the AC state and temperature of CPU. Recomended values are from 3 to 6 seconds. Allowed values are in range from 1 second to 30 seconds.
+
+.IP fifo 19
+If set to 1 daemon will create /dev/ncpufreqd fifo (pipe), which can be used to tune it's behaviour when using cpufreq interface.
+.B ncpufreqd
+will refuse to create the fifo if running with ACPI throttling instead of cpufreq interface.
+
+.IP wheel_write 19
+If set to value other than 0 /dev/ncpufreqd will be writable by members of wheel group.
+
+.IP default_mode 19
+Sets default mode (0 for auto, 1 for powersave, 2 for performance). Default mode is 0 - auto (change processor speed depending on temperature).
+
+.SH PROGRAMS
+.PP
+.B ncpufreqd
+installs
+.B ncpuauto
+,
+.B ncpuperformance
+and
+.B ncpupowersave
+binaries - this programs use the fifo created by the daemon to control which governor will be used (powersave or performance). Setting auto (via running
+.B ncpuauto
+) will return the control over processor to
+.B ncpufreqd
+). Using each of this programs is equal to running
+.PP
+.I echo {powersave,performance,auto} > /dev/ncpufreqd
+.SH NOTES
+.PP
+Don't set the temp_high to too high value, or You may burn Your processor. Most modern processor have a built-in security chip, that will turn them off before frying them, but... I've warned You.
+.SH BUGS
+.PP
+None observed. If You found a bug please contact the author.
+.SH AUTHOR
+.PP
+Krzysiek 'Nelchael' Pawlik <krzysiek.pawlik@people.pl>
+.SH SEE ALSO
+.PP
+http://www.gentoo.org/doc/en/power-management-guide.xml - great guide about power management by Dennis Nienhüser.
+

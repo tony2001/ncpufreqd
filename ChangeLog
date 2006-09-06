@@ -1,0 +1,10 @@
+2.1:
+	* Fix warnings for GCC 4.1
+	* Small fixes here and there
+	* Default mode (powersave, performance or auto)
+
+2.0:
+	* support for HT or SMP (with max 2 processors) systems
+	* configurable paths for ACPI files
+	  (reported by Miroslaw Mieszczak <mieszcz@zabrze.zigzag.pl>)
+	* Switched to autotools.

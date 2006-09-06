@@ -1,0 +1,29 @@
+
+AC_INIT(ncpufreqd, 2.1)
+
+AM_INIT_AUTOMAKE(ncpufreqd, 2.1)
+
+CFLAGS="${CFLAGS} -Wall"
+
+AC_PROG_CC
+AC_PROG_LN_S
+
+AC_GNU_SOURCE
+
+AC_HEADER_STDC
+AC_HEADER_STAT
+
+AC_CHECK_HEADERS(ctype.h \
+				 errno.h \
+				 fcntl.h \
+				 float.h \
+				 grp.h \
+				 signal.h \
+				 stdarg.h \
+				 stdio.h \
+				 sys/poll.h \
+				 syslog.h, \
+				 [],
+				 AC_MSG_FAILURE([missing header file]))
+
+AC_OUTPUT([Makefile src/Makefile progs/Makefile man8/Makefile])

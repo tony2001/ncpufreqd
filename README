@@ -1,0 +1,21 @@
+
+ncpufreqd
+---------
+
+ncpufreqd uses /sys interface, so it works only on 2.6.x kernels. It also requires
+cpufreq and ACPI to be enabled *before* start of daemon. cpufreq is used to change
+the frequency of processor, and ACPI to read AC state (on/off line) and to read
+temperature. ncpufreqd requires cpufreq's "powersave" and "performance" governors,
+ACPI's temperature and ac state modules (they may also be compiled into kernel).
+
+Using ACPI's throttling requires it to be supported by processor (that may be
+checked by looking in /proc/acpi/processor/CPU/ - if file 'throttling' exists
+and contains throttling states (T0, T1, ...) - throttling is supported).
+ncpufreq will throttle processor speed to keep it from burning, linear
+interpolation is used to determine desired throttling level.
+
+Help on configuring the daemon is contained in sample (but working!)
+/etc/ncpufreqd.conf
+
+Please see also `man 8 ncpufreqd`.
+
