@@ -114,10 +114,11 @@ void daemon_func(void) {
 			syslog(LOG_INFO, "mode set to auto");
 	}
 
+	temp = getTemperature();
 	if (config.useCpufreq)
-		cpufreq_handle_online(&config, 0);
+		cpufreq_handle_online(&config, temp);
 	else
-		acpithr_handle_online(&config, 0);
+		acpithr_handle_online(&config, temp);
 
 	while (AllowedToRun) {
 
@@ -143,11 +144,15 @@ void daemon_func(void) {
 			/* We're online! */
 
 			if (config.useCpufreq) {
-				if (cpufreq_handle_online(&config, temp) != 0)
+				if (cpufreq_handle_online(&config, temp) != 0) {
+					syslog(LOG_ERR, "Failed cpufreq_handle_online()");
 					break;
+				}
 			} else {
-				if (acpithr_handle_online(&config, temp) != 0)
+				if (acpithr_handle_online(&config, temp) != 0) {
+					syslog(LOG_ERR, "Failed acpithr_handle_online()");
 					break;
+				}
 			}
 
 		} else {
@@ -155,11 +160,15 @@ void daemon_func(void) {
 			/* We're offline! */
 
 			if (config.useCpufreq) {
-				if (cpufreq_handle_offline(&config) != 0)
+				if (cpufreq_handle_offline(&config) != 0) {
+					syslog(LOG_ERR, "Failed cpufreq_handle_offline()");
 					break;
+				}
 			} else {
-				if (acpithr_handle_offline(&config) != 0)
+				if (acpithr_handle_offline(&config) != 0) {
+					syslog(LOG_ERR, "Failed acpithr_handle_offline()");
 					break;
+				}
 			}
 
 		}

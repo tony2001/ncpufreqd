@@ -1,3 +1,7 @@
+2.2:
+	* Bug fix release - ncpufreqd is more verbose when it fails
+	* autotools update
+
 2.1:
 	* Fix warnings for GCC 4.1
 	* Small fixes here and there

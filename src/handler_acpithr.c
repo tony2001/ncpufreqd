@@ -47,7 +47,7 @@ int acpithr_handle_online(SConfig *config, unsigned int temp) {
 
 			throttling_level = 0;
 
-			if (config->verbosityLevel == 1)
+			if (config->verbosityLevel >= 1)
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 		}
@@ -69,7 +69,7 @@ int acpithr_handle_online(SConfig *config, unsigned int temp) {
 
 			throttling_level = config->thrStates - 1;
 
-			if (config->verbosityLevel == 1)
+			if (config->verbosityLevel >= 1)
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 		}
@@ -94,7 +94,7 @@ int acpithr_handle_online(SConfig *config, unsigned int temp) {
 
 		throttling_level = tmp;
 
-		if (config->verbosityLevel == 1)
+		if (config->verbosityLevel >= 1)
 			syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 	}
@@ -116,7 +116,7 @@ int acpithr_handle_offline(SConfig *config) {
 
 		throttling_level = config->thrOffline;
 
-		if (config->verbosityLevel == 1)
+		if (config->verbosityLevel >= 1)
 			syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 	}

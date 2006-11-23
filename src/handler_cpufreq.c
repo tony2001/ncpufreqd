@@ -45,7 +45,7 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_POWERSAVE;
 
-			if (config->verbosityLevel == 1)
+			if (config->verbosityLevel >= 1)
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 		}
@@ -61,7 +61,7 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_PERFORMANCE;
 
-			if (config->verbosityLevel == 1)
+			if (config->verbosityLevel >= 1)
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 		}
@@ -77,7 +77,7 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_PERFORMANCE;
 
-			if (config->verbosityLevel == 1)
+			if (config->verbosityLevel >= 1)
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 		}
@@ -91,7 +91,7 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_POWERSAVE;
 
-			if (config->verbosityLevel == 1)
+			if (config->verbosityLevel >= 1)
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 		}
@@ -115,7 +115,7 @@ int cpufreq_handle_offline(SConfig *config) {
 
 		lastGovernor = GOVERNOR_POWERSAVE;
 
-		if (config->verbosityLevel == 1)
+		if (config->verbosityLevel >= 1)
 			syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
 
 	}
