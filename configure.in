@@ -1,7 +1,7 @@
 
-AC_INIT(ncpufreqd, 2.2)
+AC_INIT(ncpufreqd, 2.3)
 
-AM_INIT_AUTOMAKE(ncpufreqd, 2.2)
+AM_INIT_AUTOMAKE(ncpufreqd, 2.3)
 
 CFLAGS="${CFLAGS} -Wall"
 
