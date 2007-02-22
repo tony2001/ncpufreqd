@@ -189,8 +189,7 @@ void daemon_func(void) {
 
 			fd = open("/dev/ncpufreqd", O_NONBLOCK);
 			if (fd < 0) {
-				syslog(LOG_ERR, "can't open fifo - disabling (%s)", strerror(errno));
-				config.createFifo = 0;
+				syslog(LOG_ERR, "can't open fifo - (%s)", strerror(errno));
 			} else {
 
 				pollFifo.fd = fd;
@@ -202,8 +201,7 @@ void daemon_func(void) {
 					case 1:
 						fifo = fdopen(fd, "r");
 						if (fifo == NULL) {
-							syslog(LOG_ERR, "can't open fifo - disabling (%s)", strerror(errno));
-							config.createFifo = 0;
+							syslog(LOG_ERR, "can't open fifo - (%s)", strerror(errno));
 						} else {
 							handleFifo(fifo);
 							fclose(fifo);
@@ -214,8 +212,7 @@ void daemon_func(void) {
 						break;
 
 					default:
-						syslog(LOG_ERR, "poll() on fifo returned error - disabling (%s)", strerror(errno));
-						config.createFifo = 0;
+						syslog(LOG_ERR, "poll() on fifo returned error - (%s)", strerror(errno));
 
 				}
 
