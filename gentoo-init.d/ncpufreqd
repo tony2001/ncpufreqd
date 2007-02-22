@@ -5,17 +5,17 @@ depend() {
 }
 
 start() {
-	
+
 	ebegin "Starting ncpufreqd"
-	/usr/sbin/ncpufreqd
+	start-stop-daemon --start --exec /usr/sbin/ncpufreqd
 	eend $?
-	
+
 }
 
 stop() {
-	
+
 	ebegin "Stopping ncpufreqd"
-	killall ncpufreqd
+	start-stop-daemon --stop --exec /usr/sbin/ncpufreqd
 	eend $?
-	
+
 }
