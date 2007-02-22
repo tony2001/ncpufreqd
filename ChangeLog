@@ -1,6 +1,7 @@
 2.3:
 	* Don't disable FIFO on error (suspend can interrupt the poll() call
 	  and then the fifo gets disabled, and it should not)
+	* Use start-stop-daemon in Gentoo init.d script
 
 2.2:
 	* Bug fix release - ncpufreqd is more verbose when it fails
