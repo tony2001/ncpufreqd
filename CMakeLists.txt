@@ -1,5 +1,5 @@
 
-project(ncpufreqd)
+project(ncpufreqd C)
 
 add_subdirectory(src)
 add_subdirectory(progs)

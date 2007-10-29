@@ -1,5 +1,5 @@
 
-project(ncpufreqd-progs)
+project(ncpufreqd-progs C)
 
 set(SOURCEs
 	ncpuauto.c

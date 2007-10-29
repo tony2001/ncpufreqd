@@ -1,5 +1,5 @@
 
-project(ncpufreqd)
+project(ncpufreqd C)
 
 set(HEADERs
 	config.h
