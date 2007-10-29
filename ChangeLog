@@ -1,3 +1,6 @@
+2.4:
+	* Now using cmake instead of autotools
+
 2.3:
 	* Don't disable FIFO on error (suspend can interrupt the poll() call
 	  and then the fifo gets disabled, and it should not)

@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 	char text[32];
 
 	if (argc) {} /* Just to remove the warning :) */
-	me = basename(argv[0]);
+	me = (char*)basename(argv[0]);
 
 	memset(text, 0, 32);
 

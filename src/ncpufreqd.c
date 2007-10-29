@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
 
 		if (strcmp(argv[1], "--version") == 0) {
 
-			printf("ncpufreqd %s compiled %s %s with GCC %s\n", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
+			printf("ncpufreqd %s compiled %s %s with GCC %s\n", "2.4", __DATE__, __TIME__, __VERSION__);
 			return 0;
 
 		} else {
