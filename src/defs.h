@@ -36,7 +36,6 @@ freely, subject to the following restrictions:
 #define MPATH		512
 
 typedef struct {
-	unsigned int ignoreTemperature;
 	unsigned int useCpufreq;
 	unsigned int tempHigh;
 	unsigned int tempLow;
