@@ -114,7 +114,9 @@ void daemon_func(void) {
 			syslog(LOG_INFO, "mode set to auto");
 	}
 
-	temp = getTemperature();
+	if (!config.ignoreTemperature)
+		temp = getTemperature();
+
 	if (config.useCpufreq)
 		cpufreq_handle_online(&config, temp);
 	else
@@ -123,7 +125,8 @@ void daemon_func(void) {
 	while (AllowedToRun) {
 
 		acState = acOnline();
-		temp = getTemperature();
+		if (!config.ignoreTemperature)
+			temp = getTemperature();
 
 		if (acState == -1) {
 
@@ -132,7 +135,7 @@ void daemon_func(void) {
 
 		}
 
-		if (temp == 0) {
+		if (!config.ignoreTemperature && temp == 0) {
 
 			syslog(LOG_ERR, "can't read ACPI temperature, terminating");
 			break;

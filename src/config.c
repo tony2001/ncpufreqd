@@ -67,6 +67,7 @@ int readConfig(SConfig *config) {
 	syslog(LOG_INFO, "reading /etc/ncpufreqd.conf");
 
 	/* Pull in defaults: */
+	config->ignoreTemperature = 0;
 	config->useCpufreq = 1;
 	config->tempHigh = 0;
 	config->tempLow = 0;
@@ -160,6 +161,16 @@ int readConfig(SConfig *config) {
 			while (ptr[0] != '=') ptr++;
 			ptr++;
 			config->wheelWrite = (unsigned int)(strtol(ptr, NULL, 10) != 0 ? 1 : 0);
+			continue;
+
+		}
+
+		if (strncmp(line, "ignore_temperature", 18) == 0) {
+
+			ptr = line + 18;
+			while (ptr[0] != '=') ptr++;
+			ptr++;
+			config->ignoreTemperature = (unsigned int)(strtol(ptr, NULL, 10) != 0 ? 1 : 0);
 			continue;
 
 		}
@@ -266,17 +277,17 @@ int readConfig(SConfig *config) {
 		config->createFifo = 0;
 	}
 
-	if (config->defaultMode < 0 || config->defaultMode > 2) {
+	if (config->defaultMode > 2) {
 		syslog(LOG_WARNING, "default_mode value invalid, defaulting to auto (0)");
 		config->defaultMode = 0;
 	}
 
 	if (config->verbosityLevel == 2) {
 		syslog(LOG_INFO, \
-			"config read: uc=%u, ts=%u, to=%u, th=%u, tl=%u, sl=%u, vl=%u, dm=%u", \
+			"config read: uc=%u, ts=%u, to=%u, th=%u, tl=%u, sl=%u, vl=%u, dm=%u, it=%u", \
 			config->useCpufreq, config->thrStates, config->thrOffline, \
 			config->tempHigh, config->tempLow, config->sleepDelay, config->verbosityLevel, \
-			config->defaultMode \
+			config->defaultMode, config->ignoreTemperature \
 		);
 		syslog(LOG_INFO, \
 			"config read: pp=\"%s\"", \
@@ -317,6 +328,9 @@ int readConfig(SConfig *config) {
 			syslog(LOG_ERR, "failed to create fifo at /dev/ncpufreqd (%s)", strerror(errno));
 
 	}
+
+	if (config->ignoreTemperature)
+		syslog(LOG_WARNING, "ignoring cpu temperature!");
 
 	return 1;
 

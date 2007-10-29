@@ -26,6 +26,7 @@ freely, subject to the following restrictions:
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h>
 
 int main(int argc, char **argv) {
 
@@ -34,7 +35,7 @@ int main(int argc, char **argv) {
 	char text[32];
 
 	if (argc) {} /* Just to remove the warning :) */
-	me = (char*)basename(argv[0]);
+	me = basename(argv[0]);
 
 	memset(text, 0, 32);
 
