@@ -32,7 +32,10 @@ freely, subject to the following restrictions:
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <grp.h>
+#include <stddef.h>
+
 #include "defs.h"
+#include "config.h"
 
 void stripPaths(SConfig *config) {
 
@@ -56,6 +59,82 @@ void stripPaths(SConfig *config) {
 
 }
 
+ncpufreqd_config_opt_t options[] = {
+	NC_OPT("temp_high", "0", OPT_INT, tempHigh)
+	NC_OPT("temp_low", "0", OPT_INT, tempLow)
+	NC_OPT("verbose", "0", OPT_INT, verbosityLevel)
+	NC_OPT("sleep", "1", OPT_INT, sleepDelay)
+	NC_OPT("fifo", "0", OPT_BOOL, createFifo)
+	NC_OPT("wheel_write", "0", OPT_BOOL, wheelWrite)
+	NC_OPT("default_mode", "0", OPT_INT, defaultMode)
+	NC_OPT("use_cpufreq", "0", OPT_BOOL, useCpufreq)
+	NC_OPT("throttling_states", "0",  OPT_INT, thrStates)
+	NC_OPT("throttling_offline", "0", OPT_INT, thrOffline)
+	NC_OPT("acpi_processor_path", "/proc/acpi/processor/CPU/throttling", OPT_STRING, acpiProcessorPath)
+	NC_OPT("acpi_ac_adapter_path", "/proc/acpi/ac_adapter/AC/state", OPT_STRING, acpiACAdapterPath)
+	NC_OPT("acpi_thermal_zone_path", "/proc/acpi/thermal_zone/THM0/temperature", OPT_STRING, acpiThermalZonePath)
+	NC_OPT_LAST
+};
+
+static inline int setConfigValue(SConfig *config, ncpufreqd_config_opt_t *opt, const char *value) /* {{{ */
+{
+	char *base = (char *)config;
+
+	switch (opt->type) {
+		case OPT_INT:
+			{
+				unsigned int *val = (unsigned int *)(base + opt->field_offset);
+				*val = (unsigned int)strtol(value, NULL, 10);
+			}
+			break;
+
+		case OPT_BOOL:
+			{
+				unsigned int *val = (unsigned int *)(base + opt->field_offset);
+				*val = (unsigned int)strtol(value, NULL, 10) ? 1 : 0;
+			}
+			break;
+
+		case OPT_STRING:
+			{
+				char *val = (char *)(base + opt->field_offset);
+				strncpy(val, value, MPATH);
+			}
+			break;
+
+		default:
+			syslog(LOG_ERR, "invalid type specified for config option %s \"\"", opt->name);
+			break;
+	}
+}
+/* }}} */
+
+static inline ncpufreqd_config_opt_t *findConfigOption(const char *name) /* {{{ */
+{
+	ncpufreqd_config_opt_t *opts = options;
+
+	while (opts->name) {
+		if (strncmp(opts->name, name, opts->name_len) == 0) {
+			return opts;
+		}
+		opts++;
+	}
+	return NULL;
+}
+/* }}} */
+
+int setConfigDefaultValues(SConfig *config) /* {{{ */
+{
+	ncpufreqd_config_opt_t *opts = options;
+
+	while (opts->name) {
+		setConfigValue(config, opts, opts->default_value);
+		opts++;
+	}
+	return 0;
+}
+/* }}} */
+
 int readConfig(SConfig *config) {
 
 	FILE *fd = NULL;
@@ -66,24 +145,7 @@ int readConfig(SConfig *config) {
 
 	syslog(LOG_INFO, "reading /etc/ncpufreqd.conf");
 
-	/* Pull in defaults: */
-	config->useCpufreq = 1;
-	config->tempHigh = 0;
-	config->tempLow = 0;
-	config->thrStates = 0;
-	config->thrOffline = 0;
-	config->sleepDelay = 0;
-	config->verbosityLevel = 0;
-	config->wheelWrite = 0;
-	config->defaultMode = 0;
-
-	config->acpiProcessorPath[0] = 0;
-	config->acpiACAdapterPath[0] = 0;
-	config->acpiThermalZonePath[0] = 0;
-
-	strcpy((char*)config->acpiProcessorPath, (const char*)"/proc/acpi/processor/CPU/throttling");
-	strcpy((char*)config->acpiACAdapterPath, (const char*)"/proc/acpi/ac_adapter/AC/state");
-	strcpy((char*)config->acpiThermalZonePath, (const char*)"/proc/acpi/thermal_zone/THM0/temperature");
+	setConfigDefaultValues(config);
 
 	/* Open file: */
 	fd = fopen("/etc/ncpufreqd.conf", "r");
@@ -93,6 +155,7 @@ int readConfig(SConfig *config) {
 	}
 
 	while (!feof(fd)) {
+		ncpufreqd_config_opt_t *opt;
 
 		memset(line, 0, 1024);
 		if (fgets(line, 1022, fd) == NULL)
@@ -104,135 +167,17 @@ int readConfig(SConfig *config) {
 		if (line[0] == '#' || line[0] == ';' || line[0] == '\n' || line[0] == '\r')
 			continue;
 
-		if (strncmp(line, "temp_high", 9) == 0) {
+		opt = findConfigOption(line);
 
-			ptr = line + 9;
-			while (ptr[0] != '=') ptr++;
+		if (!opt) {
+			syslog(LOG_WARNING, "garbage in /etc/ncpufreqd.conf at line %d", currLine);
+		}
+
+		ptr = line + opt->name_len;
+		while (ptr[0] != '=') {
 			ptr++;
-			config->tempHigh = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
 		}
-
-		if (strncmp(line, "temp_low", 8) == 0) {
-
-			ptr = line + 8;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->tempLow = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
-		}
-
-		if (strncmp(line, "verbose", 7) == 0) {
-
-			ptr = line + 7;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->verbosityLevel = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
-		}
-
-		if (strncmp(line, "sleep", 5) == 0) {
-
-			ptr = line + 5;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->sleepDelay = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
-		}
-
-		if (strncmp(line, "fifo", 4) == 0) {
-
-			ptr = line + 4;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->createFifo = (unsigned int)(strtol(ptr, NULL, 10) != 0 ? 1 : 0);
-			continue;
-
-		}
-
-		if (strncmp(line, "wheel_write", 11) == 0) {
-
-			ptr = line + 11;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->wheelWrite = (unsigned int)(strtol(ptr, NULL, 10) != 0 ? 1 : 0);
-			continue;
-
-		}
-
-		if (strncmp(line, "use_cpufreq", 11) == 0) {
-
-			ptr = line + 11;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->useCpufreq = (unsigned int)(strtol(ptr, NULL, 10) != 0 ? 1 : 0);
-			continue;
-
-		}
-
-		if (strncmp(line, "throttling_states", 17) == 0) {
-
-			ptr = line + 17;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->thrStates = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
-		}
-
-		if (strncmp(line, "throttling_offline", 18) == 0) {
-
-			ptr = line + 18;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->thrOffline = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
-		}
-
-		if (strncmp(line, "acpi_processor_path", 19) == 0) {
-
-			ptr = line + 19;
-			while (ptr[0] != '/') ptr++;
-			strncpy((char*)config->acpiProcessorPath, ptr, MPATH);
-			continue;
-
-		}
-
-		if (strncmp(line, "acpi_ac_adaper_path", 19) == 0) {
-
-			ptr = line + 19;
-			while (ptr[0] != '/') ptr++;
-			strncpy((char*)config->acpiACAdapterPath, ptr, MPATH);
-			continue;
-
-		}
-
-		if (strncmp(line, "acpi_thermal_zone_path", 22) == 0) {
-
-			ptr = line + 22;
-			while (ptr[0] != '/') ptr++;
-			strncpy((char*)config->acpiThermalZonePath, ptr, MPATH);
-			continue;
-
-		}
-
-		if (strncmp(line, "default_mode", 12) == 0) {
-
-			ptr = line + 12;
-			while (ptr[0] != '=') ptr++;
-			ptr++;
-			config->defaultMode = (unsigned int)strtol(ptr, NULL, 10);
-			continue;
-
-		}
-
-		syslog(LOG_WARNING, "garbage in /etc/ncpufreqd.conf at line %d", currLine);
-
+		setConfigValue(config, opt, ptr);
 	}
 
 	fclose(fd);
