@@ -30,12 +30,10 @@ freely, subject to the following restrictions:
 
 static int lastGovernor = 0x7F;
 
-int cpufreq_handle_online(SConfig *config, unsigned int temp) {
-
+int cpufreq_handle_online(SConfig *config, unsigned int temp) /* {{{ */
+{
 	if (config->mode == MODE_AUTO) {
-
 		if (temp > config->tempHigh && lastGovernor != GOVERNOR_POWERSAVE) {
-
 			syslog(LOG_NOTICE, "processor temperature %d exceeded maximum (%d)", temp, config->tempHigh);
 
 			if (setGovernor(GOVERNOR_POWERSAVE) == 0) {
@@ -45,13 +43,13 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_POWERSAVE;
 
-			if (config->verbosityLevel >= 1)
+			if (config->verbosityLevel >= 1) {
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
+			}
 
 		}
 
 		if (temp < config->tempLow && lastGovernor != GOVERNOR_PERFORMANCE) {
-
 			syslog(LOG_NOTICE, "processor temperature %d dropped below low temperature (%d)", temp, config->tempLow);
 
 			if (setGovernor(GOVERNOR_PERFORMANCE) == 0) {
@@ -61,15 +59,12 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_PERFORMANCE;
 
-			if (config->verbosityLevel >= 1)
+			if (config->verbosityLevel >= 1) {
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
-
+			}
 		}
-
 	} else {
-
 		if (config->mode == MODE_PERFORMANCE && lastGovernor != GOVERNOR_PERFORMANCE) {
-
 			if (setGovernor(GOVERNOR_PERFORMANCE) == 0) {
 				syslog(LOG_ERR, "can't set processor state, terminating");
 				return -1;
@@ -77,13 +72,12 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_PERFORMANCE;
 
-			if (config->verbosityLevel >= 1)
+			if (config->verbosityLevel >= 1) {
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
-
+			}
 		}
 
 		if (config->mode == MODE_POWERSAVE && lastGovernor != GOVERNOR_POWERSAVE) {
-
 			if (setGovernor(GOVERNOR_POWERSAVE) == 0) {
 				syslog(LOG_ERR, "can't set processor state, terminating");
 				return -1;
@@ -91,21 +85,19 @@ int cpufreq_handle_online(SConfig *config, unsigned int temp) {
 
 			lastGovernor = GOVERNOR_POWERSAVE;
 
-			if (config->verbosityLevel >= 1)
+			if (config->verbosityLevel >= 1) {
 				syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
-
+			}
 		}
-
 	}
-
 	return 0;
-
 }
+/* }}} */
 
-int cpufreq_handle_offline(SConfig *config) {
+int cpufreq_handle_offline(SConfig *config) /* {{{ */
+{
 
 	if (lastGovernor != GOVERNOR_POWERSAVE) {
-
 		syslog(LOG_NOTICE, "AC offline");
 
 		if (setGovernor(GOVERNOR_POWERSAVE) == 0) {
@@ -115,22 +107,22 @@ int cpufreq_handle_offline(SConfig *config) {
 
 		lastGovernor = GOVERNOR_POWERSAVE;
 
-		if (config->verbosityLevel >= 1)
+		if (config->verbosityLevel >= 1) {
 			syslog(LOG_INFO, "processor has %d KHz, and temperature %d", getProcessorKHz(), getTemperature());
-
+		}
 	}
-
 	return 0;
-
 }
+/* }}} */
 
-void cpufreq_dump_info(unsigned int acState, unsigned int temp) {
-
-	if (lastGovernor == GOVERNOR_PERFORMANCE)
+void cpufreq_dump_info(unsigned int acState, unsigned int temp) /* {{{ */
+{
+	if (lastGovernor == GOVERNOR_PERFORMANCE) {
 		syslog(LOG_INFO, "AC: %s, processor has %d KHz, temperature %d, governor: performance", \
 			(acState ? ("online") : ("offline")), getProcessorKHz(), temp);
-	else
+	} else {
 		syslog(LOG_INFO, "AC: %s, processor has %d KHz, temperature %d, governor: powersave", \
 			(acState ? ("online") : ("offline")), getProcessorKHz(), temp);
-
+	}
 }
+/* }}} */

@@ -37,7 +37,25 @@ freely, subject to the following restrictions:
 #include "defs.h"
 #include "config.h"
 
-void stripPaths(SConfig *config) {
+ncpufreqd_config_opt_t options[] = {
+	NC_OPT("temp_high", "0", OPT_INT, tempHigh)
+	NC_OPT("temp_low", "0", OPT_INT, tempLow)
+	NC_OPT("verbose", "0", OPT_INT, verbosityLevel)
+	NC_OPT("sleep", "1", OPT_INT, sleepDelay)
+	NC_OPT("fifo", "0", OPT_BOOL, createFifo)
+	NC_OPT("wheel_write", "0", OPT_BOOL, wheelWrite)
+	NC_OPT("default_mode", "0", OPT_INT, defaultMode)
+	NC_OPT("use_cpufreq", "0", OPT_BOOL, useCpufreq)
+	NC_OPT("throttling_states", "0",  OPT_INT, thrStates)
+	NC_OPT("throttling_offline", "0", OPT_INT, thrOffline)
+	NC_OPT("acpi_processor_path", "/proc/acpi/processor/CPU/throttling", OPT_STRING, acpiProcessorPath)
+	NC_OPT("acpi_ac_adapter_path", "/proc/acpi/ac_adapter/AC/state", OPT_STRING, acpiACAdapterPath)
+	NC_OPT("acpi_thermal_zone_path", "/proc/acpi/thermal_zone/THM0/temperature", OPT_STRING, acpiThermalZonePath)
+	NC_OPT_LAST
+};
+
+void stripPaths(SConfig *config)  /* {{{ */
+{
 
 	while (config->acpiProcessorPath[strlen((const char*)config->acpiProcessorPath) - 1] == '\n')
 		config->acpiProcessorPath[strlen((const char*)config->acpiProcessorPath) - 1] = 0;
@@ -58,23 +76,7 @@ void stripPaths(SConfig *config) {
 		config->acpiThermalZonePath[strlen((const char*)config->acpiThermalZonePath) - 1] = 0;
 
 }
-
-ncpufreqd_config_opt_t options[] = {
-	NC_OPT("temp_high", "0", OPT_INT, tempHigh)
-	NC_OPT("temp_low", "0", OPT_INT, tempLow)
-	NC_OPT("verbose", "0", OPT_INT, verbosityLevel)
-	NC_OPT("sleep", "1", OPT_INT, sleepDelay)
-	NC_OPT("fifo", "0", OPT_BOOL, createFifo)
-	NC_OPT("wheel_write", "0", OPT_BOOL, wheelWrite)
-	NC_OPT("default_mode", "0", OPT_INT, defaultMode)
-	NC_OPT("use_cpufreq", "0", OPT_BOOL, useCpufreq)
-	NC_OPT("throttling_states", "0",  OPT_INT, thrStates)
-	NC_OPT("throttling_offline", "0", OPT_INT, thrOffline)
-	NC_OPT("acpi_processor_path", "/proc/acpi/processor/CPU/throttling", OPT_STRING, acpiProcessorPath)
-	NC_OPT("acpi_ac_adapter_path", "/proc/acpi/ac_adapter/AC/state", OPT_STRING, acpiACAdapterPath)
-	NC_OPT("acpi_thermal_zone_path", "/proc/acpi/thermal_zone/THM0/temperature", OPT_STRING, acpiThermalZonePath)
-	NC_OPT_LAST
-};
+/* }}} */
 
 static inline int setConfigValue(SConfig *config, ncpufreqd_config_opt_t *opt, const char *value) /* {{{ */
 {
@@ -135,7 +137,8 @@ int setConfigDefaultValues(SConfig *config) /* {{{ */
 }
 /* }}} */
 
-int readConfig(SConfig *config) {
+int readConfig(SConfig *config) /* {{{ */
+{
 
 	FILE *fd = NULL;
 	char line[1024];
@@ -266,4 +269,6 @@ int readConfig(SConfig *config) {
 	return 1;
 
 }
+/* }}} */
+
 

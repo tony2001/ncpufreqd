@@ -40,7 +40,8 @@ struct stat cpu1;
 unsigned int lstatedCPU1 = 0;
 unsigned int setAlsoCPU1 = 0;
 
-int setGovernor(int gov) {
+int setGovernor(int gov) /* {{{ */
+{
 
 	FILE *fd = NULL;
 
@@ -109,16 +110,14 @@ int setGovernor(int gov) {
 			fprintf(fd, "powersave");
 			syslog(LOG_INFO, "governor set to powersave for cpu1");
 		}
-
 		fclose(fd);
-
 	}
-
 	return 1;
-
 }
+/* }}} */
 
-unsigned int getProcessorKHz(void) {
+unsigned int getProcessorKHz(void) /* {{{ */
+{
 
 	unsigned int khz = 0;
 	FILE *fd = NULL;
@@ -135,8 +134,10 @@ unsigned int getProcessorKHz(void) {
 	return khz;
 
 }
+/* }}} */
 
-int setThrottling(unsigned int level) {
+int setThrottling(unsigned int level) /* {{{ */
+{
 
 	FILE *fd = NULL;
 
@@ -154,8 +155,10 @@ int setThrottling(unsigned int level) {
 	return 1;
 
 }
+/* }}} */
 
-unsigned int getTemperature(void) {
+unsigned int getTemperature(void) /* {{{ */
+{
 
 	unsigned int i = 0;
 	char content[100];
@@ -194,8 +197,10 @@ unsigned int getTemperature(void) {
 	return (unsigned int)(strtol(ptr, NULL, 10));
 
 }
+/* }}} */
 
-int acOnline(void) {
+int acOnline(void) /* {{{ */
+{
 
 	FILE *fd = NULL;
 	char content[100];
@@ -225,3 +230,4 @@ int acOnline(void) {
 		return 1;
 
 }
+/* }}} */

@@ -43,18 +43,17 @@ freely, subject to the following restrictions:
 int AllowedToRun = 1;
 SConfig config;
 
-void sighandler(int sig) {
-
+void sighandler(int sig) /* {{{ */
+{
 	if (sig == SIGTERM) {	/* Should be always true :) */
-
 		AllowedToRun = 0;
 		return;
-
 	}
-
 }
+/* }}} */
 
-void handleFifo(FILE *fifo) {
+void handleFifo(FILE *fifo) /* {{{ */
+{
 
 	char buffer[1024];
 	memset(buffer, 0, 1024);
@@ -85,8 +84,10 @@ void handleFifo(FILE *fifo) {
 	syslog(LOG_INFO, "garbage in fifo - ignored");
 
 }
+/* }}} */
 
-void daemon_func(void) {
+void daemon_func(void) /* {{{ */
+{
 
 	int acState = 0;
 	unsigned int temp = 0;
@@ -115,34 +116,30 @@ void daemon_func(void) {
 	}
 
 	temp = getTemperature();
-	if (config.useCpufreq)
+	if (config.useCpufreq) {
 		cpufreq_handle_online(&config, temp);
-	else
+	} else {
 		acpithr_handle_online(&config, temp);
+	}
 
 	while (AllowedToRun) {
-
 		acState = acOnline();
 		temp = getTemperature();
 
 		if (acState == -1) {
-
 			syslog(LOG_ERR, "can't read ACPI AC state, terminating");
 			break;
 
 		}
 
 		if (temp == 0) {
-
 			syslog(LOG_ERR, "can't read ACPI temperature, terminating");
 			break;
 
 		}
 
 		if (acState == 1) {
-
 			/* We're online! */
-
 			if (config.useCpufreq) {
 				if (cpufreq_handle_online(&config, temp) != 0) {
 					syslog(LOG_ERR, "Failed cpufreq_handle_online()");
@@ -154,7 +151,6 @@ void daemon_func(void) {
 					break;
 				}
 			}
-
 		} else {
 
 			/* We're offline! */
@@ -170,18 +166,16 @@ void daemon_func(void) {
 					break;
 				}
 			}
-
 		}
 
 		if (config.verbosityLevel == 2) {
-
-			if (config.useCpufreq)
+			if (config.useCpufreq) {
 				/* Dump info about governor */
 				cpufreq_dump_info(acState, temp);
-			else
+			} else {
 				/* Dump info about throttling state */
 				acpithr_dump_info(acState, temp);
-
+			}
 		}
 
 		/* Check fifo */
@@ -215,58 +209,43 @@ void daemon_func(void) {
 						syslog(LOG_ERR, "poll() on fifo returned error - (%s)", strerror(errno));
 
 				}
-
 				close(fd);
-
 			}
-
 		}
-
 		sleep(config.sleepDelay);
-
 	}
 
-	if (config.createFifo)
+	if (config.createFifo) {
 		unlink("/dev/ncpufreqd");
-
+	}
 }
+/* }}} */
 
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv)  /* {{{ */
+{
 	if (argc != 1) {
-
 		if (strcmp(argv[1], "--version") == 0) {
-
 			printf("ncpufreqd %s compiled %s %s with GCC %s\n", "2.4", __DATE__, __TIME__, __VERSION__);
 			return 0;
-
 		} else {
-
 			printf("ncpufreqd doesn't accept any command line argument except --version\n");
 			return 0;
-
 		}
-
 	}
 
 	if (getuid() != 0 || getgid() != 0) {
-
 		printf("You have to be root to run this daemon\n");
 		return -2;
-
 	}
 
 	if (daemon(0, 0) == -1) {
-
 		fprintf(stderr, "failed to create child process\n");
 		return -1;
-
 	}
 
 	syslog(LOG_INFO, "ncpufreqd started");
 	daemon_func();
 	syslog(LOG_INFO, "ncpufreqd terminated");
-
 	return 0;
-
 }
+/* }}} */
