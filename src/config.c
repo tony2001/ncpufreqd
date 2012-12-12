@@ -108,6 +108,7 @@ static inline int setConfigValue(SConfig *config, ncpufreqd_config_opt_t *opt, c
 			syslog(LOG_ERR, "invalid type specified for config option %s \"\"", opt->name);
 			break;
 	}
+	return 0;
 }
 /* }}} */
 
