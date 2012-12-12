@@ -34,11 +34,7 @@ freely, subject to the following restrictions:
 
 #include "defs.h"
 
-extern SConfig config;
-
-struct stat cpu1;
-unsigned int lstatedCPU1 = 0;
-unsigned int setAlsoCPU1 = 0;
+extern nc_config_t config;
 
 int setGovernor(int gov) /* {{{ */
 {
@@ -48,28 +44,6 @@ int setGovernor(int gov) /* {{{ */
 	if (gov != GOVERNOR_PERFORMANCE && gov != GOVERNOR_POWERSAVE) {
 		syslog(LOG_ERR, "invalid governor requested (%d)", gov);
 		return 0;
-	}
-
-	if (lstatedCPU1 == 0) {
-
-		lstatedCPU1 = 1;
-		setAlsoCPU1 = 0;
-
-		memset(&cpu1, 0, sizeof(struct stat));
-
-		if (lstat("/sys/devices/system/cpu/cpu1", &cpu1) == 0) {
-			/* This should work like so:
-			 *  - cpu1 exists -> lstat returns 0
-			 *  - cpu1 is a directiry (not a symlink!!) -> set governor for cpu1 too
-			 */
-			if (S_ISDIR(cpu1.st_mode) && !S_ISLNK(cpu1.st_mode)) {
-				syslog(LOG_INFO,
-					"detected second processor at \"/sys/devices/system/cpu/cpu1\""
-				);
-				setAlsoCPU1 = 1;
-			}
-		}
-
 	}
 
 	fd = fopen("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "w");
@@ -92,26 +66,6 @@ int setGovernor(int gov) /* {{{ */
 	fclose(fd);
 	fd = NULL;
 
-	if (setAlsoCPU1) {
-
-		fd = fopen("/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor", "w");
-		if (fd == NULL) {
-			syslog(LOG_ERR,
-				"failed to open \"/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor\" (%s)",
-				strerror(errno)
-			);
-			return 0;
-		}
-
-		if (gov == GOVERNOR_PERFORMANCE) {
-			fprintf(fd, "performance");
-			syslog(LOG_INFO, "governor set to performance for cpu1");
-		} else {
-			fprintf(fd, "powersave");
-			syslog(LOG_INFO, "governor set to powersave for cpu1");
-		}
-		fclose(fd);
-	}
 	return 1;
 }
 /* }}} */
@@ -136,27 +90,6 @@ unsigned int getProcessorKHz(void) /* {{{ */
 }
 /* }}} */
 
-int setThrottling(unsigned int level) /* {{{ */
-{
-
-	FILE *fd = NULL;
-
-	fd = fopen((const char*)config.acpiProcessorPath, "w");
-	if (fd == NULL) {
-		syslog(LOG_ERR, "failed to open \"%s\" (%s)", config.acpiProcessorPath, strerror(errno));
-		return 0;
-	}
-
-	fprintf(fd, "%u", level);
-	fclose(fd);
-
-	/* syslog(LOG_INFO, "throttling level set to %u", level); */
-
-	return 1;
-
-}
-/* }}} */
-
 unsigned int getTemperature(void) /* {{{ */
 {
 
@@ -167,9 +100,9 @@ unsigned int getTemperature(void) /* {{{ */
 	FILE *fd = NULL;
 	int read = 0;
 
-	fd = fopen((const char*)config.acpiThermalZonePath, "r");
+	fd = fopen((const char*)config.thermal_sensor_path, "r");
 	if (fd == NULL) {
-		syslog(LOG_ERR, "failed to open \"%s\" (%s) - do you have ACPI Thermal Zone enabled in your kernel and correct path in config?", config.acpiThermalZonePath, strerror(errno));
+		syslog(LOG_ERR, "failed to open \"%s\" (%s) - do you have ACPI Thermal Zone enabled in your kernel and correct path in config?", config.thermal_sensor_path, strerror(errno));
 		return 0;
 	}
 
@@ -178,7 +111,7 @@ unsigned int getTemperature(void) /* {{{ */
 	read = fread(content, sizeof(char), 99, fd);
 
 	if (read == 0) {
-		syslog(LOG_ERR, "failed to read \"%s\" (%s)", config.acpiThermalZonePath, strerror(errno));
+		syslog(LOG_ERR, "failed to read \"%s\" (%s)", config.thermal_sensor_path, strerror(errno));
 		fclose(fd);
 		return 0;
 	}
@@ -206,9 +139,9 @@ int acOnline(void) /* {{{ */
 	char content[100];
 	int read = 0;
 
-	fd = fopen((const char*)config.acpiACAdapterPath, "r");
+	fd = fopen((const char*)config.ac_state_path, "r");
 	if (fd == NULL) {
-		syslog(LOG_ERR, "failed to open \"%s\" (%s) - do you have ACPI AC Adapter enabled in you kernel and correct path in config?", config.acpiACAdapterPath, strerror(errno));
+		syslog(LOG_ERR, "failed to open \"%s\" (%s) - do you have ACPI AC Adapter enabled in you kernel and correct path in config?", config.ac_state_path, strerror(errno));
 		return -1;
 	}
 
@@ -217,7 +150,7 @@ int acOnline(void) /* {{{ */
 	read = fread(content, sizeof(char), 99, fd);
 
 	if (read == 0) {
-		syslog(LOG_ERR, "failed to read \"%s\" (%s)", config.acpiACAdapterPath, strerror(errno));
+		syslog(LOG_ERR, "failed to read \"%s\" (%s)", config.ac_state_path, strerror(errno));
 		fclose(fd);
 		return -1;
 	}

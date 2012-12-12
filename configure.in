@@ -3,7 +3,7 @@ AC_PREREQ(2.61)
 
 AC_INIT([ncfpufreqd],[0.0.1])
 AM_INIT_AUTOMAKE([no-define silent-rules])
-AC_CONFIG_HEADERS([src/ncpufreqd_config.h])
+AC_CONFIG_HEADER([src/ncpufreqd_config.h])
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -19,13 +19,15 @@ AC_DEFUN([AC_PROG_CXXCPP], [dummy_cxxcpp=disabled])
 AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
+AC_CHECK_FUNCS([sysconf])
+
 STANDARD_PREFIXES="/usr /usr/local /opt /local"
 
 dir_resolve() dnl {{{
 {
   pwd=`pwd`
   cd "$1" 2>/dev/null || cd "${pwd}/${1}" 2>/dev/null
-  if test "$?" = "0"; then 
+  if test "$?" = "0"; then
     echo `pwd -P`
   else
     echo "$1"
@@ -68,8 +70,59 @@ else
 fi
 dnl }}}
 
+dnl NC_FIND_FILE([VAR], [description], [files]) {{{
+AC_DEFUN([NC_FIND_FILE], [
+
+  varname=`echo $1`
+  eval $varname=""
+  for file in $3; do
+    AC_MSG_CHECKING([for $2 in $file])
+    if test -r "$file"; then
+      eval $varname="$file"
+      AC_MSG_RESULT([found])
+      break
+    else
+      AC_MSG_RESULT([not found])
+    fi
+  done
+
+  value=`echo ${!varname}`
+  eval $varname="$value"
+
+  if test -z "$value"; then
+    AC_MSG_WARN([Failed to find $2, you'll have to specify it in the config file in manually])
+  fi
+])
+dnl }}}
+
+NC_FIND_FILE([THERMAL_SENSOR_PATH], [thermal sensor], [ /sys/class/thermal/thermal_zone0/temp \
+												   /sys/class/hwmon/hwmon0/temp1_input \
+												   /sys/class/hwmon/hwmon2/device/temp1_input])
+AC_DEFINE_UNQUOTED([NC_THERMAL_SENSOR_PATH], ["$THERMAL_SENSOR_PATH"], [thermal sensor])
+AC_SUBST([NC_THERMAL_SENSOR_PATH])
+
+NC_FIND_FILE([NC_CPU_FREQ_LIST_PATH], [CPU frequencies list], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies ])
+AC_DEFINE_UNQUOTED([NC_CPU_FREQ_LIST_PATH], ["$NC_CPU_FREQ_LIST_PATH"], [CPU frequencies list])
+AC_SUBST([NC_CPU_FREQ_LIST_PATH])
+
+NC_FIND_FILE([NC_CPU_CURRENT_FREQ_PATH], [CPU current frequency path], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq ])
+AC_DEFINE_UNQUOTED([NC_CPU_CURRENT_FREQ_PATH], ["$NC_CPU_CURRENT_FREQ_PATH"], [CPU current frequency path])
+AC_SUBST([NC_CPU_CURRENT_FREQ_PATH])
+
+NC_FIND_FILE([NC_CPU_MAX_FREQ_PATH], [CPU max frequency path], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq ])
+AC_DEFINE_UNQUOTED([NC_CPU_MAX_FREQ_PATH], ["$NC_CPU_MAX_FREQ_PATH"], [CPU max frequency path])
+AC_SUBST([NC_CPU_MAX_FREQ_PATH])
+
+NC_FIND_FILE([NC_CPU_GOVERNOR_PATH], [CPU governor path], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ])
+AC_DEFINE_UNQUOTED([NC_CPU_GOVERNOR_PATH], ["$NC_CPU_GOVERNOR_PATH"], [CPU governor path])
+AC_SUBST([NC_CPU_GOVERNOR_PATH])
+
+NC_FIND_FILE([NC_AC_STATE_PATH], [AC state path], [ /sys/class/power_supply/AC/online ])
+AC_DEFINE_UNQUOTED([NC_AC_STATE_PATH], ["$NC_AC_STATE_PATH"], [AC state path])
+AC_SUBST([NC_AC_STATE_PATH])
+
 AC_SUBST(INSTALL_STRIP_FLAG)
 
-AC_CONFIG_FILES([Makefile src/Makefile progs/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile progs/Makefile ncpufreqd.conf])
 AC_OUTPUT
 

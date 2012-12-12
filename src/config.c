@@ -38,47 +38,50 @@ freely, subject to the following restrictions:
 #include "config.h"
 
 ncpufreqd_config_opt_t options[] = {
-	NC_OPT("temp_high", "0", OPT_INT, tempHigh)
-	NC_OPT("temp_low", "0", OPT_INT, tempLow)
-	NC_OPT("verbose", "0", OPT_INT, verbosityLevel)
-	NC_OPT("sleep", "1", OPT_INT, sleepDelay)
-	NC_OPT("fifo", "0", OPT_BOOL, createFifo)
-	NC_OPT("wheel_write", "0", OPT_BOOL, wheelWrite)
-	NC_OPT("default_mode", "0", OPT_INT, defaultMode)
-	NC_OPT("use_cpufreq", "0", OPT_BOOL, useCpufreq)
-	NC_OPT("throttling_states", "0",  OPT_INT, thrStates)
-	NC_OPT("throttling_offline", "0", OPT_INT, thrOffline)
-	NC_OPT("acpi_processor_path", "/proc/acpi/processor/CPU/throttling", OPT_STRING, acpiProcessorPath)
-	NC_OPT("acpi_ac_adapter_path", "/proc/acpi/ac_adapter/AC/state", OPT_STRING, acpiACAdapterPath)
-	NC_OPT("acpi_thermal_zone_path", "/proc/acpi/thermal_zone/THM0/temperature", OPT_STRING, acpiThermalZonePath)
+	NC_OPT("temp_high", "0", OPT_INT, temp_high)
+	NC_OPT("temp_low", "0", OPT_INT, temp_low)
+	NC_OPT("verbose", "0", OPT_INT, verbosity_level)
+	NC_OPT("sleep", "1", OPT_INT, sleep_delay)
+	NC_OPT("fifo", "0", OPT_BOOL, create_fifo)
+	NC_OPT("wheel_write", "0", OPT_BOOL, wheel_write)
+	NC_OPT("default_mode", "0", OPT_INT, default_mode)
+	NC_OPT("thermal_sensor_path", NC_THERMAL_SENSOR_PATH, OPT_STRING, thermal_sensor_path)
+	NC_OPT("cpu_freq_list_path", NC_CPU_FREQ_LIST_PATH, OPT_STRING, cpu_freq_path)
+	NC_OPT("cpu_max_freq_path", NC_CPU_MAX_FREQ_PATH, OPT_STRING, cpu_max_freq_path)
+	NC_OPT("cpu_current_freq_path", NC_CPU_CURRENT_FREQ_PATH, OPT_STRING, cpu_current_freq_path)
+	NC_OPT("cpu_governor_path", NC_CPU_GOVERNOR_PATH, OPT_STRING, cpu_governor_path)
+	NC_OPT("ac_state_path", NC_AC_STATE_PATH, OPT_STRING, ac_state_path)
 	NC_OPT_LAST
 };
 
-void stripPaths(SConfig *config)  /* {{{ */
+unsigned char mask[256];
+int mask_initialized = 0;
+
+static inline void nc_rtrim(unsigned char *str) /* {{{ */
 {
+	unsigned char chars[] = " \n\r\t\v\0";
+	unsigned char *end;
+	int i;
 
-	while (config->acpiProcessorPath[strlen((const char*)config->acpiProcessorPath) - 1] == '\n')
-		config->acpiProcessorPath[strlen((const char*)config->acpiProcessorPath) - 1] = 0;
+	if (!mask_initialized) {
+		memset(mask, 0, sizeof(mask));
+		for (i = 0; i < sizeof(chars); i++) {
+			mask[chars[i]] = 1;
+		}
+		mask_initialized = 1;
+	}
 
-	while (config->acpiACAdapterPath[strlen((const char*)config->acpiACAdapterPath) - 1] == '\n')
-		config->acpiACAdapterPath[strlen((const char*)config->acpiACAdapterPath) - 1] = 0;
-
-	while (config->acpiThermalZonePath[strlen((const char*)config->acpiThermalZonePath) - 1] == '\n')
-		config->acpiThermalZonePath[strlen((const char*)config->acpiThermalZonePath) - 1] = 0;
-
-	while (config->acpiProcessorPath[strlen((const char*)config->acpiProcessorPath) - 1] == ' ')
-		config->acpiProcessorPath[strlen((const char*)config->acpiProcessorPath) - 1] = 0;
-
-	while (config->acpiACAdapterPath[strlen((const char*)config->acpiACAdapterPath) - 1] == ' ')
-		config->acpiACAdapterPath[strlen((const char*)config->acpiACAdapterPath) - 1] = 0;
-
-	while (config->acpiThermalZonePath[strlen((const char*)config->acpiThermalZonePath) - 1] == ' ')
-		config->acpiThermalZonePath[strlen((const char*)config->acpiThermalZonePath) - 1] = 0;
-
+	end = str + strlen((const char *)str);
+	while (end > str) {
+		if (mask[*end]) {
+			*end = '\0';
+		}
+		end--;
+	}
 }
 /* }}} */
 
-static inline int setConfigValue(SConfig *config, ncpufreqd_config_opt_t *opt, const char *value) /* {{{ */
+static inline int nc_config_value_set(nc_config_t *config, ncpufreqd_config_opt_t *opt, const char *value) /* {{{ */
 {
 	char *base = (char *)config;
 
@@ -99,8 +102,9 @@ static inline int setConfigValue(SConfig *config, ncpufreqd_config_opt_t *opt, c
 
 		case OPT_STRING:
 			{
-				char *val = (char *)(base + opt->field_offset);
-				strncpy(val, value, MPATH);
+				unsigned char *val = (unsigned char *)(base + opt->field_offset);
+				strncpy((char *)val, value, MPATH);
+				nc_rtrim(val);
 			}
 			break;
 
@@ -126,19 +130,19 @@ static inline ncpufreqd_config_opt_t *findConfigOption(const char *name) /* {{{ 
 }
 /* }}} */
 
-int setConfigDefaultValues(SConfig *config) /* {{{ */
+int nc_config_default_values_set(nc_config_t *config) /* {{{ */
 {
 	ncpufreqd_config_opt_t *opts = options;
 
 	while (opts->name) {
-		setConfigValue(config, opts, opts->default_value);
+		nc_config_value_set(config, opts, opts->default_value);
 		opts++;
 	}
 	return 0;
 }
 /* }}} */
 
-int readConfig(SConfig *config) /* {{{ */
+int nc_config_read(nc_config_t *config) /* {{{ */
 {
 
 	FILE *fd = NULL;
@@ -149,7 +153,7 @@ int readConfig(SConfig *config) /* {{{ */
 
 	syslog(LOG_INFO, "reading /etc/ncpufreqd.conf");
 
-	setConfigDefaultValues(config);
+	nc_config_default_values_set(config);
 
 	/* Open file: */
 	fd = fopen("/etc/ncpufreqd.conf", "r");
@@ -181,52 +185,45 @@ int readConfig(SConfig *config) /* {{{ */
 		while (ptr[0] != '=') {
 			ptr++;
 		}
-		setConfigValue(config, opt, ptr);
+		nc_config_value_set(config, opt, ptr);
 	}
 
 	fclose(fd);
 
 	/* Sanity checks */
 
-	stripPaths(config);
-
-	if (config->sleepDelay > 30) {
+	if (config->sleep_delay > 30) {
 		syslog(LOG_ERR, "sleep value in /etc/ncpufreqd.conf is too high");
 		return 0;
 	}
 
-	if (config->sleepDelay == 0) {
+	if (config->sleep_delay == 0) {
 		syslog(LOG_ERR, "sleep value in /etc/ncpufreqd.conf equals 0");
 		return 0;
 	}
 
-	if (config->tempHigh <= config->tempLow) {
+	if (config->temp_high <= config->temp_low) {
 		syslog(LOG_ERR, "temp_high is lower or equal to temp_low");
 		return 0;
 	}
 
-	if (config->verbosityLevel >= 3) {
+	if (config->verbosity_level >= 3) {
 		syslog(LOG_WARNING, "verbosity level clamped to 2");
-		config->verbosityLevel = 2;
+		config->verbosity_level = 2;
 	}
 
-	if (config->useCpufreq != 1 && config->createFifo) {
-		syslog(LOG_INFO, "can't use fifo when using ACPI throttling, fifo disabled");
-		config->createFifo = 0;
-	}
-
-	if (config->defaultMode > 2) {
+	if (config->default_mode > 2) {
 		syslog(LOG_WARNING, "default_mode value invalid, defaulting to auto (0)");
-		config->defaultMode = 0;
+		config->default_mode = 0;
 	}
 
-	if (config->verbosityLevel == 2) {
+	if (config->verbosity_level == 2) {
 		syslog(LOG_INFO, \
-			"config read: uc=%u, ts=%u, to=%u, th=%u, tl=%u, sl=%u, vl=%u, dm=%u", \
-			config->useCpufreq, config->thrStates, config->thrOffline, \
-			config->tempHigh, config->tempLow, config->sleepDelay, config->verbosityLevel, \
-			config->defaultMode \
+			"config read: th=%u, tl=%u, sl=%u, vl=%u, dm=%u", \
+			config->temp_high, config->temp_low, config->sleep_delay, config->verbosity_level, \
+			config->default_mode \
 		);
+		/*
 		syslog(LOG_INFO, \
 			"config read: pp=\"%s\"", \
 			config->acpiProcessorPath
@@ -239,18 +236,19 @@ int readConfig(SConfig *config) /* {{{ */
 			"config read: tzp=\"%s\"", \
 			config->acpiThermalZonePath
 		);
+		*/
 	}
 
 	unlink("/dev/ncpufreqd");
 
-	if (config->createFifo) {
+	if (config->create_fifo) {
 
 		if (mkfifo("/dev/ncpufreqd", 0222) == 0) {
 
 			syslog(LOG_NOTICE, "fifo created at /dev/ncpufreqd");
 			chmod("/dev/ncpufreqd", S_IWUSR);
 
-			if (config->wheelWrite) {
+			if (config->wheel_write) {
 
 				chmod("/dev/ncpufreqd", S_IWUSR | S_IWGRP);
 				wheelGroup = getgrnam("wheel");

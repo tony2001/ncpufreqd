@@ -26,6 +26,8 @@ freely, subject to the following restrictions:
 #ifndef __defs_h__
 #define __defs_h__
 
+#include "ncpufreqd_config.h"
+
 #define GOVERNOR_PERFORMANCE	0x00
 #define GOVERNOR_POWERSAVE		0xFF
 
@@ -36,20 +38,21 @@ freely, subject to the following restrictions:
 #define MPATH		512
 
 typedef struct {
-	unsigned int useCpufreq;
-	unsigned int tempHigh;
-	unsigned int tempLow;
-	unsigned int thrStates;
-	unsigned int thrOffline;
-	unsigned int sleepDelay;
-	unsigned int verbosityLevel;
-	unsigned int createFifo;
+	unsigned int temp_high;
+	unsigned int temp_low;
+	unsigned int sleep_delay;
+	unsigned int verbosity_level;
+	unsigned int create_fifo;
 	unsigned int mode;
-	unsigned int wheelWrite;
-	unsigned int defaultMode;
-	unsigned char acpiProcessorPath[MPATH];
-	unsigned char acpiACAdapterPath[MPATH];
-	unsigned char acpiThermalZonePath[MPATH];
-} SConfig;
+	unsigned int wheel_write;
+	unsigned int default_mode;
+	unsigned char thermal_sensor_path[MPATH];
+	unsigned char cpu_freq_list_path[MPATH];
+	unsigned char cpu_freq_path[MPATH];
+	unsigned char cpu_max_freq_path[MPATH];
+	unsigned char cpu_current_freq_path[MPATH];
+	unsigned char cpu_governor_path[MPATH];
+	unsigned char ac_state_path[MPATH];
+} nc_config_t;
 
 #endif

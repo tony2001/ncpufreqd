@@ -38,10 +38,9 @@ freely, subject to the following restrictions:
 #include "functions.h"
 
 #include "handler_cpufreq.h"
-#include "handler_acpithr.h"
 
 int AllowedToRun = 1;
-SConfig config;
+nc_config_t config;
 
 void sighandler(int sig) /* {{{ */
 {
@@ -52,7 +51,7 @@ void sighandler(int sig) /* {{{ */
 }
 /* }}} */
 
-void handleFifo(FILE *fifo) /* {{{ */
+void handle_fifo(FILE *fifo) /* {{{ */
 {
 
 	char buffer[1024];
@@ -93,15 +92,15 @@ void daemon_func(void) /* {{{ */
 	unsigned int temp = 0;
 	FILE *fifo;
 	int fd;
-	struct pollfd pollFifo;
+	struct pollfd poll_fifo;
 
 	signal(SIGTERM, sighandler);
-	if (readConfig(&config) == 0) {
+	if (nc_config_read(&config) == 0) {
 		return;
 	}
 
 	/* Used only with cpufreq: */
-	switch (config.defaultMode) {
+	switch (config.default_mode) {
 		case 1:
 			config.mode = MODE_POWERSAVE;
 			syslog(LOG_INFO, "mode set to powersave");
@@ -116,11 +115,7 @@ void daemon_func(void) /* {{{ */
 	}
 
 	temp = getTemperature();
-	if (config.useCpufreq) {
-		cpufreq_handle_online(&config, temp);
-	} else {
-		acpithr_handle_online(&config, temp);
-	}
+	cpufreq_handle_online(&config, temp);
 
 	while (AllowedToRun) {
 		acState = acOnline();
@@ -140,64 +135,45 @@ void daemon_func(void) /* {{{ */
 
 		if (acState == 1) {
 			/* We're online! */
-			if (config.useCpufreq) {
-				if (cpufreq_handle_online(&config, temp) != 0) {
-					syslog(LOG_ERR, "Failed cpufreq_handle_online()");
-					break;
-				}
-			} else {
-				if (acpithr_handle_online(&config, temp) != 0) {
-					syslog(LOG_ERR, "Failed acpithr_handle_online()");
-					break;
-				}
+			if (cpufreq_handle_online(&config, temp) != 0) {
+				syslog(LOG_ERR, "Failed cpufreq_handle_online()");
+				break;
 			}
 		} else {
 
 			/* We're offline! */
 
-			if (config.useCpufreq) {
-				if (cpufreq_handle_offline(&config) != 0) {
-					syslog(LOG_ERR, "Failed cpufreq_handle_offline()");
-					break;
-				}
-			} else {
-				if (acpithr_handle_offline(&config) != 0) {
-					syslog(LOG_ERR, "Failed acpithr_handle_offline()");
-					break;
-				}
+			if (cpufreq_handle_offline(&config) != 0) {
+				syslog(LOG_ERR, "Failed cpufreq_handle_offline()");
+				break;
 			}
 		}
 
-		if (config.verbosityLevel == 2) {
-			if (config.useCpufreq) {
-				/* Dump info about governor */
-				cpufreq_dump_info(acState, temp);
-			} else {
-				/* Dump info about throttling state */
-				acpithr_dump_info(acState, temp);
-			}
+		if (config.verbosity_level == 2) {
+			/* Dump info about governor */
+			cpufreq_dump_info(acState, temp);
 		}
 
 		/* Check fifo */
-		if (config.createFifo) {
+		if (config.create_fifo) {
 
 			fd = open("/dev/ncpufreqd", O_NONBLOCK);
 			if (fd < 0) {
 				syslog(LOG_ERR, "can't open fifo - (%s)", strerror(errno));
 			} else {
 
-				pollFifo.fd = fd;
-				pollFifo.events = POLLIN | POLLPRI;
-				pollFifo.revents = 0;
+				poll_fifo.fd = fd;
+				poll_fifo.events = POLLIN | POLLPRI;
+				poll_fifo.revents = 0;
 
-				switch (poll(&pollFifo, 1, 100)) {
+				switch (poll(&poll_fifo, 1, 100)) {
 
 					case 1:
 						fifo = fdopen(fd, "r");
 						if (fifo == NULL) {
 							syslog(LOG_ERR, "can't open fifo - (%s)", strerror(errno));
 						} else {
-							handleFifo(fifo);
+							handle_fifo(fifo);
 							fclose(fifo);
 						}
 						break;
@@ -212,10 +188,10 @@ void daemon_func(void) /* {{{ */
 				close(fd);
 			}
 		}
-		sleep(config.sleepDelay);
+		sleep(config.sleep_delay);
 	}
 
-	if (config.createFifo) {
+	if (config.create_fifo) {
 		unlink("/dev/ncpufreqd");
 	}
 }

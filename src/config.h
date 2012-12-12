@@ -23,7 +23,7 @@ freely, subject to the following restrictions:
 
 **************************************************************************/
 
-extern int readConfig(SConfig *config);
+extern int nc_config_read(nc_config_t *config);
 
 typedef enum {
 	OPT_BOOL=0,
@@ -40,7 +40,7 @@ typedef struct {
 } ncpufreqd_config_opt_t;
 
 #define NC_OPT(name, default_value, type, field) \
-	{name, sizeof("name")-1, default_value, offsetof(SConfig, field), type},
+	{name, sizeof("name")-1, default_value, offsetof(nc_config_t, field), type},
 
 #define NC_OPT_LAST \
 	{NULL, 0, 0, 0}

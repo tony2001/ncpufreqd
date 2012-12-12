@@ -23,6 +23,6 @@ freely, subject to the following restrictions:
 
 **************************************************************************/
 
-int cpufreq_handle_online(SConfig *config, unsigned int temp);
-int cpufreq_handle_offline(SConfig *config);
+int cpufreq_handle_online(nc_config_t *config, unsigned int temp);
+int cpufreq_handle_offline(nc_config_t *config);
 void cpufreq_dump_info(unsigned int acState, unsigned int temp);

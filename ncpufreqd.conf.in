@@ -59,6 +59,19 @@ default_mode = 0
 # Path to throttling file. That file contains throttling info about Your
 # processor. Used only with ACPI throttling, not used with cpufreq. This *has to*
 # point to throttling file.
+
+thermal_sensor_path = @NC_THERMAL_SENSOR_PATH@
+
+cpu_freq_list_path = @NC_CPU_FREQ_LIST_PATH@
+
+cpu_current_freq_path = @NC_CPU_CURRENT_FREQ_PATH@
+
+cpu_max_freq_path = @NC_CPU_MAX_FREQ_PATH@
+
+cpu_governor_path = @NC_CPU_GOVERNOR_PATH@
+
+ac_state_path = @NC_AC_STATE_PATH@
+
 #acpi_processor_path = /proc/acpi/processor/CPU/throttling
 
 # Path to state file for AC adapter. AC in path may be replaced by ADP0 or
