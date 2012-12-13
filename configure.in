@@ -123,6 +123,6 @@ AC_SUBST([NC_AC_STATE_PATH])
 
 AC_SUBST(INSTALL_STRIP_FLAG)
 
-AC_CONFIG_FILES([Makefile src/Makefile progs/Makefile ncpufreqd.conf])
+AC_CONFIG_FILES([Makefile src/Makefile progs/Makefile man8/Makefile ncpufreqd.conf])
 AC_OUTPUT
 
