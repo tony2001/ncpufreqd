@@ -48,10 +48,8 @@ typedef struct {
 	unsigned int default_mode;
 	unsigned char thermal_sensor_path[MPATH];
 	unsigned char cpu_freq_list_path[MPATH];
-	unsigned char cpu_freq_path[MPATH];
 	unsigned char cpu_max_freq_path[MPATH];
 	unsigned char cpu_current_freq_path[MPATH];
-	unsigned char cpu_governor_path[MPATH];
 	unsigned char ac_state_path[MPATH];
 } nc_config_t;
 

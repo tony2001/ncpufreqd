@@ -46,10 +46,9 @@ ncpufreqd_config_opt_t options[] = {
 	NC_OPT("wheel_write", "0", OPT_BOOL, wheel_write)
 	NC_OPT("default_mode", "0", OPT_INT, default_mode)
 	NC_OPT("thermal_sensor_path", NC_THERMAL_SENSOR_PATH, OPT_STRING, thermal_sensor_path)
-	NC_OPT("cpu_freq_list_path", NC_CPU_FREQ_LIST_PATH, OPT_STRING, cpu_freq_path)
-	NC_OPT("cpu_max_freq_path", NC_CPU_MAX_FREQ_PATH, OPT_STRING, cpu_max_freq_path)
-	NC_OPT("cpu_current_freq_path", NC_CPU_CURRENT_FREQ_PATH, OPT_STRING, cpu_current_freq_path)
-	NC_OPT("cpu_governor_path", NC_CPU_GOVERNOR_PATH, OPT_STRING, cpu_governor_path)
+	NC_OPT("cpu_freq_list_path", NC_CPU0_FREQ_LIST_PATH, OPT_STRING, cpu_freq_list_path)
+	NC_OPT("cpu_max_freq_path", NC_CPU0_MAX_FREQ_PATH, OPT_STRING, cpu_max_freq_path)
+	NC_OPT("cpu_current_freq_path", NC_CPU0_CURRENT_FREQ_PATH, OPT_STRING, cpu_current_freq_path)
 	NC_OPT("ac_state_path", NC_AC_STATE_PATH, OPT_STRING, ac_state_path)
 	NC_OPT_LAST
 };

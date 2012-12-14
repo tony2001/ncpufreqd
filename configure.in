@@ -95,27 +95,31 @@ AC_DEFUN([NC_FIND_FILE], [
 ])
 dnl }}}
 
-NC_FIND_FILE([THERMAL_SENSOR_PATH], [thermal sensor], [ /sys/class/thermal/thermal_zone0/temp \
+NC_FIND_FILE([THERMAL_SENSOR_PATH], [thermal sensor path], [ /sys/class/thermal/thermal_zone0/temp \
 												   /sys/class/hwmon/hwmon0/temp1_input \
 												   /sys/class/hwmon/hwmon2/device/temp1_input])
-AC_DEFINE_UNQUOTED([NC_THERMAL_SENSOR_PATH], ["$THERMAL_SENSOR_PATH"], [thermal sensor])
+AC_DEFINE_UNQUOTED([NC_THERMAL_SENSOR_PATH], ["$THERMAL_SENSOR_PATH"], [thermal sensor path])
 AC_SUBST([NC_THERMAL_SENSOR_PATH])
 
-NC_FIND_FILE([NC_CPU_FREQ_LIST_PATH], [CPU frequencies list], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies ])
-AC_DEFINE_UNQUOTED([NC_CPU_FREQ_LIST_PATH], ["$NC_CPU_FREQ_LIST_PATH"], [CPU frequencies list])
-AC_SUBST([NC_CPU_FREQ_LIST_PATH])
+NC_FIND_FILE([NC_CPU0_PATH], [CPU0 path], [ /sys/devices/system/cpu/cpu0 ])
+AC_DEFINE_UNQUOTED([NC_CPU0_PATH], ["$NC_CPU0_PATH"], [CPU0 path])
+AC_SUBST([NC_CPU0_PATH])
 
-NC_FIND_FILE([NC_CPU_CURRENT_FREQ_PATH], [CPU current frequency path], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq ])
-AC_DEFINE_UNQUOTED([NC_CPU_CURRENT_FREQ_PATH], ["$NC_CPU_CURRENT_FREQ_PATH"], [CPU current frequency path])
-AC_SUBST([NC_CPU_CURRENT_FREQ_PATH])
+if test "x$NC_CPU0_PATH" = "x" ; then
+	AC_MSG_WARN([Well, I'll try to continue further, but it makes so little sense to do it..])
+fi
 
-NC_FIND_FILE([NC_CPU_MAX_FREQ_PATH], [CPU max frequency path], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq ])
-AC_DEFINE_UNQUOTED([NC_CPU_MAX_FREQ_PATH], ["$NC_CPU_MAX_FREQ_PATH"], [CPU max frequency path])
-AC_SUBST([NC_CPU_MAX_FREQ_PATH])
+NC_FIND_FILE([NC_CPU0_FREQ_LIST_PATH], [CPU0 frequencies list], [ $NC_CPU0_PATH/cpufreq/scaling_available_frequencies ])
+AC_DEFINE_UNQUOTED([NC_CPU0_FREQ_LIST_PATH], ["$NC_CPU0_FREQ_LIST_PATH"], [CPU0 frequencies list])
+AC_SUBST([NC_CPU0_FREQ_LIST_PATH])
 
-NC_FIND_FILE([NC_CPU_GOVERNOR_PATH], [CPU governor path], [ /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ])
-AC_DEFINE_UNQUOTED([NC_CPU_GOVERNOR_PATH], ["$NC_CPU_GOVERNOR_PATH"], [CPU governor path])
-AC_SUBST([NC_CPU_GOVERNOR_PATH])
+NC_FIND_FILE([NC_CPU0_CURRENT_FREQ_PATH], [CPU0 current frequency path], [ $NC_CPU0_PATH/cpufreq/scaling_cur_freq ])
+AC_DEFINE_UNQUOTED([NC_CPU0_CURRENT_FREQ_PATH], ["$NC_CPU0_CURRENT_FREQ_PATH"], [CPU0 current frequency path])
+AC_SUBST([NC_CPU0_CURRENT_FREQ_PATH])
+
+NC_FIND_FILE([NC_CPU0_MAX_FREQ_PATH], [CPU0 max frequency path], [ $NC_CPU0_PATH/cpufreq/scaling_max_freq ])
+AC_DEFINE_UNQUOTED([NC_CPU0_MAX_FREQ_PATH], ["$NC_CPU0_MAX_FREQ_PATH"], [CPU0 max frequency path])
+AC_SUBST([NC_CPU0_MAX_FREQ_PATH])
 
 NC_FIND_FILE([NC_AC_STATE_PATH], [AC state path], [ /sys/class/power_supply/AC/online ])
 AC_DEFINE_UNQUOTED([NC_AC_STATE_PATH], ["$NC_AC_STATE_PATH"], [AC state path])
