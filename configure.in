@@ -8,7 +8,6 @@ AM_MAINTAINER_MODE
 
 dnl Checks for programs.
 AC_PROG_CC
-AC_PROG_LD
 
 dnl we don't need a C++ compiler
 undefine([AC_PROG_CXX])
@@ -16,10 +15,12 @@ AC_DEFUN([AC_PROG_CXX], [])
 undefine([AC_PROG_CXXCPP])
 AC_DEFUN([AC_PROG_CXXCPP], [dummy_cxxcpp=disabled])
 
-AM_PROG_LIBTOOL
 AC_PROG_INSTALL
+AC_PROG_RANLIB
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
 
-AC_CHECK_FUNCS([sysconf])
+AC_CHECK_FUNCS([sysconf poll])
 
 STANDARD_PREFIXES="/usr /usr/local /opt /local"
 
